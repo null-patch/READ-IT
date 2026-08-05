@@ -1,17 +1,15 @@
-from __future__ import annotations
-
+import uuid
 import enum
-from datetime import datetime
 
-from sqlalchemy import (
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
-    UniqueConstraint,
-    func,
-)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
+from sqlalchemy import UniqueConstraint
+
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 
 from app.database.database import Base
 
@@ -33,23 +31,25 @@ class Friend(Base):
         ),
     )
 
-    id: Mapped[int] = mapped_column(
-        Integer,
+    id = Column(
+        UUID(as_uuid=True),
         primary_key=True,
-        index=True,
+        default=uuid.uuid4,
     )
 
-    requester_id: Mapped[int] = mapped_column(
+    requester_id = Column(
+        UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
 
-    addressee_id: Mapped[int] = mapped_column(
+    addressee_id = Column(
+        UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
 
-    status: Mapped[FriendStatus] = mapped_column(
+    status = Column(
         Enum(
             FriendStatus,
             name="friend_status",
@@ -60,17 +60,17 @@ class Friend(Base):
         server_default=FriendStatus.PENDING.value,
     )
 
-    created_at: Mapped[datetime] = mapped_column(
+    created_at = Column(
         DateTime(timezone=True),
-        nullable=False,
         server_default=func.now(),
+        nullable=False,
     )
 
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at = Column(
         DateTime(timezone=True),
-        nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
+        nullable=False,
     )
 
     requester = relationship(

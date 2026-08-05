@@ -1,11 +1,13 @@
 import uuid
 
 from sqlalchemy import Column
+from sqlalchemy import DateTime
 from sqlalchemy import String
 from sqlalchemy import Text
-from sqlalchemy import DateTime
 
 from sqlalchemy.dialects.postgresql import UUID
+
+from sqlalchemy.orm import relationship
 
 from sqlalchemy.sql import func
 
@@ -70,4 +72,18 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now()
+    )
+
+    sent_friend_requests = relationship(
+        "Friend",
+        foreign_keys="Friend.requester_id",
+        back_populates="requester",
+        cascade="all, delete-orphan"
+    )
+
+    received_friend_requests = relationship(
+        "Friend",
+        foreign_keys="Friend.addressee_id",
+        back_populates="addressee",
+        cascade="all, delete-orphan"
     )

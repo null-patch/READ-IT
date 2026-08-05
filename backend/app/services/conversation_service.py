@@ -16,9 +16,8 @@ def create_conversation(
     )
 
     db.add(conv)
-    db.commit()
-    db.refresh(conv)
-
+    # NOTE: do not commit here so callers can control transactions
+    db.flush()
     return conv
 
 

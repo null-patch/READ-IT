@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import friend
+import os
+
 from app.api.auth import router as auth_router
 from app.api.users import router as users_router
 from app.api.ws import router as websocket_router
@@ -11,17 +12,23 @@ from app.api.message_read import router as message_read_router
 from app.api.media import router as media_router
 
 
-
 app = FastAPI(
     title="Read It! API",
     description="Backend API for Read It!",
     version="0.1.0"
 )
 
-# CORS
+# CORS - allow configuration via ALLOWED_ORIGINS (comma-separated).
+# If ALLOWED_ORIGINS is not set the code falls back to ["*"] (development compatibility).
+_allowed_origins = os.getenv("ALLOWED_ORIGINS")
+if _allowed_origins:
+    allow_origins = [o.strip() for o in _allowed_origins.split(",") if o.strip()]
+else:
+    allow_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,6 +42,7 @@ app.include_router(conversation_router)
 app.include_router(message_router)
 app.include_router(message_read_router)
 app.include_router(media_router)
+
 
 @app.get("/")
 async def root():

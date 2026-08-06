@@ -1,6 +1,7 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from uuid import UUID
 
 from app.models.message import Message
 from app.models.conversation import Conversation
@@ -23,9 +24,20 @@ def send_message(
     Returns the persisted Message ORM instance (committed and refreshed).
     Raises ValueError on bad input or authorization errors.
     """
+    # Normalize IDs to UUID objects for accurate DB comparisons
+    try:
+        conv_uuid = UUID(str(conversation_id))
+    except Exception:
+        raise ValueError("Invalid conversation id.")
+
+    try:
+        sender_uuid = UUID(str(sender_id))
+    except Exception:
+        raise ValueError("Invalid sender id.")
+
     # Ensure conversation exists
     conv: Conversation = (
-        db.query(Conversation).filter(Conversation.id == conversation_id).first()
+        db.query(Conversation).filter(Conversation.id == conv_uuid).first()
     )
     if not conv:
         raise ValueError("Conversation not found.")
@@ -34,8 +46,8 @@ def send_message(
     membership = (
         db.query(ConversationMember)
         .filter(
-            ConversationMember.conversation_id == conversation_id,
-            ConversationMember.user_id == sender_id,
+            ConversationMember.conversation_id == conv_uuid,
+            ConversationMember.user_id == sender_uuid,
         )
         .first()
     )
@@ -48,8 +60,8 @@ def send_message(
         other_members = (
             db.query(ConversationMember.user_id)
             .filter(
-                ConversationMember.conversation_id == conversation_id,
-                ConversationMember.user_id != sender_id,
+                ConversationMember.conversation_id == conv_uuid,
+                ConversationMember.user_id != sender_uuid,
             )
             .all()
         )
@@ -63,10 +75,8 @@ def send_message(
                 db.query(Friend)
                 .filter(
                     or_(
-                        (Friend.requester_id == sender_id)
-                        & (Friend.addressee_id == other_id),
-                        (Friend.requester_id == other_id)
-                        & (Friend.addressee_id == sender_id),
+                        (Friend.requester_id == sender_uuid) & (Friend.addressee_id == other_id),
+                        (Friend.requester_id == other_id) & (Friend.addressee_id == sender_uuid),
                     ),
                     Friend.status == FriendStatus.ACCEPTED,
                 )
@@ -77,8 +87,8 @@ def send_message(
 
     # Persist message
     msg = Message(
-        conversation_id=conversation_id,
-        sender_id=sender_id,
+        conversation_id=conv_uuid,
+        sender_id=sender_uuid,
         message_type=message_type,
         content=content,
     )

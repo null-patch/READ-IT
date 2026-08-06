@@ -1,13 +1,3 @@
-"""Friend service implementation with full business rules.
-
-This updates the existing skeleton to:
-- enforce authorization (only addressee can accept/reject)
-- prevent self-requests and duplicate requests (both directions)
-- create or reuse a private conversation on friend acceptance
-- ensure transactional integrity
-- return data structures compatible with API response models
-"""
-
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, func
 

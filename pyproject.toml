@@ -1,0 +1,28 @@
+[tool.black]
+line-length = 88
+target-version = ['py311']
+skip-string-normalization = true
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["app"]
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "C", "B", "I", "RUF"]
+ignore = ["E501"]
+exclude = [".git", "venv", "env", "build", "dist", "__pycache__"]
+
+[tool.ruff.flake8]
+max-line-length = 88
+
+[tool.mypy]
+python_version = 3.11
+check_untyped_defs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[tool.poetry]
+name = "read-it"
+version = "0.1.0"

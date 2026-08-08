@@ -1,0 +1,2 @@
+# versions directory for alembic revisions
+# Add migration scripts here (created by `alembic revision`)

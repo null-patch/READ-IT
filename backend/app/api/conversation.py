@@ -5,18 +5,16 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user
 from app.database.database import get_db
-
 from app.models.user import User
-
 from app.schemas.conversation import (
-    ConversationCreate,
-    ConversationResponse,
-    ConversationMemberResponse,
     AddParticipantRequest,
+    ConversationCreate,
+    ConversationMemberResponse,
+    ConversationResponse,
     RemoveParticipantRequest,
 )
-
 from app.services.conversation import ConversationService
+
 
 router = APIRouter(
     prefix="/conversations",
@@ -87,6 +85,7 @@ def add_participant(
         db=db,
         conversation_id=conversation_id,
         user_id=payload.user_id,
+        requester_id=current_user.id,
     )
 
 
@@ -104,6 +103,7 @@ def remove_participant(
         db=db,
         conversation_id=conversation_id,
         user_id=payload.user_id,
+        requester_id=current_user.id,
     )
 
 
@@ -119,4 +119,5 @@ def get_participants(
     return ConversationService.get_members(
         db=db,
         conversation_id=conversation_id,
+        user_id=current_user.id,
     )

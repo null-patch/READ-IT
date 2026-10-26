@@ -92,11 +92,40 @@ class ConversationService:
         return conversation
 
     @staticmethod
+    def _verify_membership(
+        db: Session,
+        conversation_id: UUID,
+        user_id: UUID,
+    ) -> None:
+
+        member = (
+            db.query(ConversationMember)
+            .filter(
+                ConversationMember.conversation_id == conversation_id,
+                ConversationMember.user_id == user_id,
+            )
+            .first()
+        )
+
+        if not member:
+            raise HTTPException(
+                status_code=404,
+                detail="Conversation not found.",
+            )
+
+    @staticmethod
     def add_participant(
         db: Session,
         conversation_id: UUID,
         user_id: UUID,
+        requester_id: UUID,
     ):
+
+        ConversationService._verify_membership(
+            db=db,
+            conversation_id=conversation_id,
+            user_id=requester_id,
+        )
 
         exists = (
             db.query(ConversationMember)
@@ -129,7 +158,14 @@ class ConversationService:
         db: Session,
         conversation_id: UUID,
         user_id: UUID,
+        requester_id: UUID,
     ):
+
+        ConversationService._verify_membership(
+            db=db,
+            conversation_id=conversation_id,
+            user_id=requester_id,
+        )
 
         member = (
             db.query(ConversationMember)
@@ -153,7 +189,14 @@ class ConversationService:
     def get_members(
         db: Session,
         conversation_id: UUID,
+        user_id: UUID,
     ):
+
+        ConversationService._verify_membership(
+            db=db,
+            conversation_id=conversation_id,
+            user_id=user_id,
+        )
 
         return (
             db.query(ConversationMember)

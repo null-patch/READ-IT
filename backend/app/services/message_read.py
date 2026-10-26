@@ -3,9 +3,9 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.models.conversation_member import ConversationMember
 from app.models.message import Message
 from app.models.message_read import MessageRead
-from app.models.conversation_member import ConversationMember
 
 
 class MessageReadService:

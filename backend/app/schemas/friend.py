@@ -1,9 +1,8 @@
-from uuid import UUID
 from datetime import datetime
 from enum import Enum
+from uuid import UUID
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 
 class FriendStatus(str, Enum):

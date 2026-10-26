@@ -1,13 +1,13 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import Optional
 from uuid import UUID
 
-from app.services.websocket_manager import manager
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
 from app.core.security import decode_access_token
 from app.database.database import get_db
-from app.models.user import User
 from app.models.conversation_member import ConversationMember
+from app.models.user import User
 from app.services.message_service import send_message
+from app.services.websocket_manager import manager
 
 router = APIRouter(tags=["WebSocket"])
 
@@ -26,7 +26,7 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
       { "type": "read", "message_id": "<uuid>" }
     """
     # Extract token from query params
-    token: Optional[str] = websocket.query_params.get("token")
+    token: str | None = websocket.query_params.get("token")
     if not token:
         await websocket.close(code=4001)
         return

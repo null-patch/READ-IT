@@ -1,12 +1,6 @@
 import uuid
 
-from sqlalchemy import Boolean
-from sqlalchemy import Column
-from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
-from sqlalchemy import String
-from sqlalchemy import Text
-
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
@@ -19,45 +13,46 @@ class Message(Base):
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid4
+        default=uuid.uuid4,
     )
 
     conversation_id = Column(
         UUID(as_uuid=True),
         ForeignKey("conversations.id", ondelete="CASCADE"),
-        nullable=False
+        nullable=True,
     )
 
     sender_id = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True
+        nullable=True,
     )
 
     message_type = Column(
         String(20),
-        nullable=False,
-        default="text"
+        nullable=True,
+        default="text",
     )
 
     content = Column(
         Text,
-        nullable=True
+        nullable=True,
     )
 
     edited = Column(
         Boolean,
-        nullable=False,
-        default=False
+        nullable=True,
+        default=False,
     )
 
     deleted = Column(
         Boolean,
-        nullable=False,
-        default=False
+        nullable=True,
+        default=False,
     )
 
     created_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now()
+        DateTime(timezone=False),
+        server_default=func.now(),
+        nullable=True,
     )

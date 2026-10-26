@@ -1,12 +1,11 @@
-from typing import Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
-from app.models.message import Message
+from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
 from app.models.conversation import Conversation
 from app.models.conversation_member import ConversationMember
 from app.models.friend import Friend, FriendStatus
-from app.models.user import User
+from app.models.message import Message
 
 
 def send_message(
@@ -14,7 +13,7 @@ def send_message(
     conversation_id,
     sender_id,
     message_type: str = "text",
-    content: Optional[str] = None,
+    content: str | None = None,
 ) -> Message:
     """
     Persist a message in the given conversation.

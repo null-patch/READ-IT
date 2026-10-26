@@ -1,12 +1,8 @@
-from uuid import UUID
 import json
+from uuid import UUID
 
-from fastapi import APIRouter
-from fastapi import WebSocket
-from fastapi import WebSocketDisconnect
-from fastapi import status
-from jose import JWTError
-from jose import jwt
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
+from jose import JWTError, jwt
 
 from app.core.config import settings
 from app.websocket.manager import manager

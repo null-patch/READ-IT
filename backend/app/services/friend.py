@@ -5,6 +5,7 @@ from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 
 from app.models.friend import Friend, FriendStatus
+from app.models.user import User
 
 
 class FriendService:
@@ -19,7 +20,7 @@ class FriendService:
         if requester_id == addressee_id:
             raise HTTPException(
                 status_code=400,
-                detail="You cannot add yourself."
+                detail="You cannot add yourself.",
             )
 
         existing = (
@@ -42,7 +43,7 @@ class FriendService:
         if existing:
             raise HTTPException(
                 status_code=409,
-                detail="Friend request already exists."
+                detail="Friend request already exists.",
             )
 
         friend = Friend(
@@ -77,7 +78,7 @@ class FriendService:
         if not request:
             raise HTTPException(
                 status_code=404,
-                detail="Friend request not found."
+                detail="Friend request not found.",
             )
 
         request.status = FriendStatus.ACCEPTED
@@ -107,7 +108,7 @@ class FriendService:
         if not request:
             raise HTTPException(
                 status_code=404,
-                detail="Friend request not found."
+                detail="Friend request not found.",
             )
 
         request.status = FriendStatus.REJECTED
@@ -145,7 +146,7 @@ class FriendService:
         if not friendship:
             raise HTTPException(
                 status_code=404,
-                detail="Friendship not found."
+                detail="Friendship not found.",
             )
 
         db.delete(friendship)
@@ -156,15 +157,23 @@ class FriendService:
         db: Session,
         user_id: UUID,
     ):
-
         return (
-            db.query(Friend)
+            db.query(User)
+            .join(
+                Friend,
+                or_(
+                    and_(
+                        Friend.requester_id == user_id,
+                        Friend.addressee_id == User.id,
+                    ),
+                    and_(
+                        Friend.requester_id == User.id,
+                        Friend.addressee_id == user_id,
+                    ),
+                ),
+            )
             .filter(
                 Friend.status == FriendStatus.ACCEPTED,
-                or_(
-                    Friend.requester_id == user_id,
-                    Friend.addressee_id == user_id,
-                ),
             )
             .all()
         )

@@ -1,10 +1,12 @@
+from typing import Any
+
 from fastapi import WebSocket
-from typing import Dict, List, Any
+
 
 # active_connections maps conversation_id -> list[{"ws": WebSocket, "user_id": str}]
 class ConnectionManager:
     def __init__(self) -> None:
-        self.active_connections: Dict[str, List[Dict[str, Any]]] = {}
+        self.active_connections: dict[str, list[dict[str, Any]]] = {}
 
     async def connect(self, conversation_id: str, websocket: WebSocket, user_id: str) -> None:
         """
@@ -46,7 +48,7 @@ class ConnectionManager:
         if conversation_id not in self.active_connections:
             return
 
-        dead_connections: List[Dict[str, Any]] = []
+        dead_connections: list[dict[str, Any]] = []
 
         for entry in list(self.active_connections[conversation_id]):
             ws = entry["ws"]

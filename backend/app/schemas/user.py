@@ -1,6 +1,5 @@
-from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr
 
@@ -8,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 class UserCreate(BaseModel):
     username: str
     display_name: str
-    email: Optional[EmailStr] = None
+    email: EmailStr | None = None
     password: str
 
 
@@ -21,9 +20,9 @@ class UserResponse(BaseModel):
     id: UUID
     username: str
     display_name: str
-    email: Optional[EmailStr] = None
-    avatar_url: Optional[str] = None
-    bio: Optional[str] = None
+    email: EmailStr | None = None
+    avatar_url: str | None = None
+    bio: str | None = None
     status: str
     created_at: datetime
 

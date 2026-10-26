@@ -1,10 +1,10 @@
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func
 
-from app.models.friend import Friend, FriendStatus
-from app.models.user import User
 from app.models.conversation import Conversation
 from app.models.conversation_member import ConversationMember
+from app.models.friend import Friend, FriendStatus
+from app.models.user import User
 from app.schemas.conversation import ConversationCreate
 from app.services.conversation_service import create_conversation
 

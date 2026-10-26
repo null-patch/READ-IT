@@ -1,11 +1,8 @@
-from fastapi import APIRouter
-from fastapi import Depends
-
-from app.models.user import User
-
-from app.schemas.user import UserResponse
+from fastapi import APIRouter, Depends
 
 from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.schemas.user import UserResponse
 
 router = APIRouter(
     prefix="/users",

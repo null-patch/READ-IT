@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,10 +18,17 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# CORS
+# CORS - allow configuration via ALLOWED_ORIGINS (comma-separated).
+# If ALLOWED_ORIGINS is not set the code falls back to ["*"] (development compatibility).
+_allowed_origins = os.getenv("ALLOWED_ORIGINS")
+if _allowed_origins:
+    allow_origins = [o.strip() for o in _allowed_origins.split(",") if o.strip()]
+else:
+    allow_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,6 +42,7 @@ app.include_router(conversation_router)
 app.include_router(message_router)
 app.include_router(message_read_router)
 app.include_router(media_router)
+
 
 @app.get("/")
 async def root():

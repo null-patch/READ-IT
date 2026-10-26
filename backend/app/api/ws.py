@@ -47,9 +47,21 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
         await websocket.close(code=4004)
         return
 
+    # Validate conversation_id is a UUID
+    try:
+        conv_uuid = UUID(conversation_id)
+    except Exception:
+        await websocket.close(code=4007)
+        return
+
+    conv_id_str = str(conv_uuid)
+
     # Acquire DB session from get_db generator safely
     db_gen = get_db()
     db = next(db_gen)
+
+    connected = False
+    user = None
 
     try:
         # Ensure user exists
@@ -58,11 +70,11 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
             await websocket.close(code=4005)
             return
 
-        # Ensure user is a member of the conversation
+        # Ensure user is a member of the conversation (compare with UUID)
         membership = (
             db.query(ConversationMember)
             .filter(
-                ConversationMember.conversation_id == conversation_id,
+                ConversationMember.conversation_id == conv_uuid,
                 ConversationMember.user_id == user_id,
             )
             .first()
@@ -72,7 +84,8 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
             return
 
         # Register connection
-        await manager.connect(conversation_id, websocket, str(user_id))
+        await manager.connect(conv_id_str, websocket, str(user_id))
+        connected = True
 
         # Mark presence (best-effort)
         try:
@@ -80,7 +93,10 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
             db.add(user)
             db.commit()
         except Exception:
-            db.rollback()
+            try:
+                db.rollback()
+            except Exception:
+                pass
 
         try:
             while True:
@@ -97,7 +113,7 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
                     message_type = data.get("message_type", "text")
                     content = data.get("content")
                     try:
-                        msg = send_message(db, conversation_id, user_id, message_type, content)
+                        msg = send_message(db, conv_uuid, user_id, message_type, content)
                     except ValueError as e:
                         # send error back to sender only
                         await websocket.send_json({"event": "error", "message": str(e)})
@@ -115,7 +131,7 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
                         },
                     }
                     # broadcast to others (exclude sender connections)
-                    await manager.send_to_conversation(conversation_id, payload, exclude_user_id=str(user_id))
+                    await manager.send_to_conversation(conv_id_str, payload, exclude_user_id=str(user_id))
 
                     # send ack to sender (optionally)
                     await websocket.send_json({"event": "sent", "message_id": str(msg.id)})
@@ -123,33 +139,44 @@ async def websocket_endpoint(websocket: WebSocket, conversation_id: str):
                 elif typ == "typing":
                     status = data.get("status", True)
                     evt = {"event": "typing", "user_id": str(user_id), "status": bool(status)}
-                    await manager.send_to_conversation(conversation_id, evt, exclude_user_id=str(user_id))
+                    await manager.send_to_conversation(conv_id_str, evt, exclude_user_id=str(user_id))
 
                 elif typ == "read":
                     # Broadcast read receipt. Persisting read receipts requires DB schema changes.
                     message_id = data.get("message_id")
                     evt = {"event": "read", "user_id": str(user_id), "message_id": message_id}
-                    await manager.send_to_conversation(conversation_id, evt, exclude_user_id=str(user_id))
+                    await manager.send_to_conversation(conv_id_str, evt, exclude_user_id=str(user_id))
 
                 else:
                     # Unknown event types are ignored
                     continue
 
         except WebSocketDisconnect:
-            # client disconnected
-            manager.disconnect(conversation_id, websocket)
+            # client disconnected; ensure manager is informed
+            try:
+                manager.disconnect(conv_id_str, websocket)
+            except Exception:
+                pass
 
     finally:
-        # mark offline (best-effort) and close DB generator
+        # Ensure disconnection handled and mark offline (best-effort) and close DB generator
+        if connected:
+            try:
+                manager.disconnect(conv_id_str, websocket)
+            except Exception:
+                pass
+
         try:
-            user.status = "offline"
-            db.add(user)
-            db.commit()
+            if user:
+                user.status = "offline"
+                db.add(user)
+                db.commit()
         except Exception:
             try:
                 db.rollback()
             except Exception:
                 pass
+
         try:
             db_gen.close()
         except Exception:
